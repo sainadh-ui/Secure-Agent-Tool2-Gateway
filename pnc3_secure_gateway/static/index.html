@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Secure Agent Tool Gateway</title>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<div id="loginView" class="login-shell">
+  <div class="login-card glass">
+    <div class="brand-mark">🛡</div>
+    <h1>Secure Agent Tool Gateway</h1>
+    <p>Zero-trust control plane for AI agent tool calls.</p>
+    <form id="loginForm">
+      <label>Username<input id="username" value="admin" autocomplete="username"/></label>
+      <label>Password<input id="password" value="admin123" type="password" autocomplete="current-password"/></label>
+      <button class="btn primary full" type="submit">Sign in securely</button>
+    </form>
+    <div class="demo-creds"><b>Demo:</b> admin/admin123 &nbsp;•&nbsp; analyst/analyst123 &nbsp;•&nbsp; demo/demo123</div>
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+
+<div id="appView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">🛡</span><div><b>Secure</b><small>Agent Tool Gateway</small></div></div>
+    <nav>
+      <button data-page="overview" class="nav active">◉ Overview</button>
+      <button data-page="chat" class="nav">◌ Chat bot</button>
+      <button data-page="simulator" class="nav">⚔ Attack Lab</button>
+      <button data-page="requests" class="nav">⇄ Tool Requests</button>
+      <button data-page="approvals" class="nav">✓ Approval Queue <span id="approvalBadge" class="badge hidden">0</span></button>
+      <button data-page="policies" class="nav">⚙ Policies</button>
+      <button data-page="tools" class="nav">▦ Tool Registry</button>
+      <button data-page="agents" class="nav">◎ Agent Registry</button>
+      <button data-page="events" class="nav">⚠ Security Events</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="connection"><span class="dot"></span> Gateway protected</div><div id="userInfo" class="user-info"></div><button id="logoutBtn" class="btn ghost full">Logout</button></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><h2 id="pageTitle">Overview</h2><span class="muted">AI actions are never trusted by default.</span></div><div class="top-actions"><span id="rolePill" class="pill">ROLE</span><button id="refreshBtn" class="btn ghost">↻ Refresh</button></div></header>
+
+    <section id="page-overview" class="page active-page">
+      <div class="hero glass"><div><span class="eyebrow">ZERO-TRUST EXECUTION</span><h1>Secure every AI tool call before it reaches the tool.</h1><p>The gateway validates identity, parameters, destinations, payloads, policies and runtime context, then returns a transparent decision.</p></div><div class="hero-flow"><span>Chat bot</span><i>→</i><strong>Secure Gateway</strong><i>→</i><span>Tool</span></div></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="grid-2"><div class="panel glass"><div class="panel-head"><h3>Recent decisions</h3><button class="btn ghost small" onclick="loadAll()">Refresh</button></div><div id="recentRequests" class="table-wrap"></div></div><div class="panel glass"><div class="panel-head"><h3>Threat summary</h3></div><div id="threatSummary"></div></div></div>
+    </section>
+
+    <section id="page-chat" class="page"><div class="chat-layout"><div class="panel glass chat-panel"><div class="panel-head"><h3>Chat bot</h3><span class="pill green">Gateway Protected</span></div><div id="chatMessages" class="chat-messages"></div><form id="chatForm" class="chat-input"><select id="chatAgent"></select><input id="chatText" placeholder="Try: Find customer 12345 / delete database / ignore previous instructions..."/><button class="btn primary" type="submit">Send</button></form><div class="chat-config"><label>API Key<input id="geminiKeyInput" type="password" placeholder="Paste key here (optional)"/></label><button id="saveGeminiKeyBtn" class="btn ghost small" type="button">Save key</button></div></div><div class="panel glass"><h3>Security boundary</h3><div class="timeline"><div><b>1. AI intent</b><span>The chat bot proposes an action only after the gateway screens the prompt.</span></div><div><b>2. Gateway interception</b><span>Tool calls are validated before execution.</span></div><div><b>3. Independent validation</b><span>Schema, permissions, DLP, destination and policy are checked.</span></div><div><b>4. Decision</b><span>ALLOW, BLOCK, SANITIZE or APPROVAL.</span></div><div><b>5. Controlled execution</b><span>Only approved mock tools execute.</span></div></div></div></div>
+      <div class="panel glass"><div class="panel-head"><h3>Input Safety Scanner</h3><span class="muted">Heuristic screening of prompt, chat, document, and code content; not a guarantee of safety.</span></div><div class="scan-grid"><label>Source type<select id="scanType"><option value="prompt">Prompt</option><option value="chat">Chat transcript</option><option value="document">Document</option><option value="code">Code</option></select></label><label>Content<textarea id="scanContent" rows="7" placeholder="Enter the prompt"></textarea></label><label>Optional file<input id="scanFile" type="file" accept=".txt,.md,.pdf,.py,.js,.ts,.json,.html,.java,.cs,.cpp,.yml,.yaml"></label><button id="scanBtn" class="btn primary" type="button">Analyze safety</button></div><div id="scanResult" class="scan-result"></div></div></section>
+    <section id="page-simulator" class="page"><div class="panel glass"><div class="panel-head"><h3>Adversarial Test Lab</h3><span class="muted">Simulation-only; no real external attacks are sent.</span></div><div class="scenario-grid" id="scenarioGrid"></div><div id="simResult" class="sim-result hidden"></div></div></section>
+
+    <section id="page-requests" class="page"><div class="panel glass"><div class="panel-head"><h3>Live Tool Requests</h3><button class="btn ghost small" onclick="loadAll()">Reload</button></div><div id="requestsTable" class="table-wrap"></div></div></section>
+    <section id="page-approvals" class="page"><div class="panel glass"><div class="panel-head"><h3>Security Approval Queue</h3><span class="muted">High-risk actions require a human decision.</span></div><div id="approvalsTable" class="table-wrap"></div></div></section>
+    <section id="page-policies" class="page"><div class="grid-2"><div class="panel glass"><div class="panel-head"><h3>Active Policies</h3><button id="newPolicyBtn" class="btn primary small">+ New Policy</button></div><div id="policiesTable" class="table-wrap"></div></div><div class="panel glass"><h3>Policy Builder</h3><form id="policyForm" class="form-grid"><label>Name<input id="pName" required/></label><label>Agent<select id="pAgent"></select></label><label>Tool<select id="pTool"></select></label><label>Action<select id="pAction"><option>ALLOW</option><option>BLOCK</option><option>SANITIZE</option><option>RATE_LIMIT</option><option>REQUIRE_APPROVAL</option></select></label><label>Max Risk<input id="pRisk" type="number" min="0" max="100" value="80"/></label><label>Destinations<input id="pDest" placeholder="api.company.example, security.company.example"/></label><button class="btn primary" type="submit">Save policy</button></form><div id="policyMsg" class="success"></div></div></div></section>
+    <section id="page-tools" class="page"><div class="panel glass"><div class="panel-head"><h3>Tool Registry</h3><span class="muted">Registered tool schemas and agent access.</span></div><div id="toolsTable" class="table-wrap"></div></div></section>
+    <section id="page-agents" class="page"><div class="panel glass"><div class="panel-head"><h3>Agent Registry</h3><span class="muted">Least-privilege capabilities by agent.</span></div><div id="agentsTable" class="table-wrap"></div></div></section>
+    <section id="page-events" class="page"><div class="panel glass"><div class="panel-head"><h3>Security Events</h3><span class="muted">Auditable security detections and decisions.</span></div><div id="eventsTable" class="table-wrap"></div></div></section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

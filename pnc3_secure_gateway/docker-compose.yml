@@ -1,0 +1,8 @@
+services:
+  pnc3:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PNC3_SECRET: "change-this-in-production"
+    restart: unless-stopped
